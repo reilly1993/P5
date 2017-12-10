@@ -1,7 +1,10 @@
 #include <SoftwareSerial.h>
 
+//male: 8, 9
+//female: 6, 7
+
 SoftwareSerial portMale(8, 9);
-SoftwareSerial portFemale(10, 11);
+SoftwareSerial portFemale(6, 7);
 
 String readString;
 String writeString;
@@ -12,10 +15,10 @@ void setup() {
 
   if(!digitalRead(2)) {
     portMale = SoftwareSerial(8, 9); //9 input
-    portFemale = SoftwareSerial(10, 11); //10 output
+    portFemale = SoftwareSerial(6, 7); //10 output
   } else {
     portMale = SoftwareSerial(9, 8); //8 input
-    portFemale = SoftwareSerial(11, 10); //11 output
+    portFemale = SoftwareSerial(7, 6); //11 output
   }
 
   while(!Serial);
@@ -28,7 +31,7 @@ void loop() {
   readString = portFemale.readStringUntil('|');
   writeString = digitalRead(2) ? "AC1" : "AC0";
   writeString += ".";
-  writeString += analogRead(A0);
+  writeString += analogRead(A5);
   writeString += "-";
   
   if(readString.length() > 0){
