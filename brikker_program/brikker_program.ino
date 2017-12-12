@@ -6,19 +6,23 @@ SoftwareSerial portFemale(10, 11);
 String readString;
 String writeString;
 
+bool upwards = true;
+long int lastTime;
+
 void setup() {
+  pinMode(9, INPUT);
   Serial.begin(9600);
-  pinMode(2, INPUT);
 
-  if(!digitalRead(2)) {
-    portMale = SoftwareSerial(8, 9); //9 input
-    portFemale = SoftwareSerial(10, 11); //10 output
+  if(!digitalRead(9)) delay(100); //dobbelt test
+  upwards = digitalRead(9);
+  
+  if(!upwards) {
+    portMale = SoftwareSerial(10, 11); //9 input
+    portFemale = SoftwareSerial(3, 2); //10 output
   } else {
-    portMale = SoftwareSerial(10, 11); //11 input
-    portFemale = SoftwareSerial(8, 9); //8 output
+    portMale = SoftwareSerial(11, 10); //8 input
+    portFemale = SoftwareSerial(2, 3); //11 output
   }
-
-  while(!Serial);
 
   portMale.begin(9600);
   portFemale.begin(9600);
@@ -26,13 +30,12 @@ void setup() {
 
 void loop() {
   readString = portFemale.readStringUntil('|');
-  writeString = digitalRead(2) ? "AC1-" : "AC0-";
-  
-  if(readString.length() > 0){
-    Serial.println(readString);
+  writeString = upwards ? "11-" : "10-"; //[0] = identifier, [1] tilt
+  if(readString.length() > 0) {
     writeString += readString + "|";
     portMale.print(writeString);
   } else {
     portMale.print(writeString + '|');
   }
+  delay(10);
 }

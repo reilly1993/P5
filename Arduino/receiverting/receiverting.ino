@@ -15,7 +15,7 @@ void setup() {
   Serial.println("setup ja");
 
   // Initialise the IO and ISR
-  vw_set_rx_pin(2);
+  //vw_set_rx_pin(2);
   vw_setup(2000);   // Bits per sec
   vw_rx_start();       // Start the receiver PLL running
 }
