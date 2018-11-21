@@ -25,6 +25,7 @@ void setup() {
 
   for(int i = 0; i<3; i++) {
     ports[i].begin(9600);
+    ports[i].setTimeout(300);
   }
 }
 
@@ -55,7 +56,7 @@ void loop() {
       sendString.toCharArray(buf, 50); //konverter til char array for at kunne sende over 433mhz
       vw_send((uint8_t *)buf, strlen(buf));
       vw_wait_tx(); // Wait until the whole message is gone
-      delay(200); //nødvendigt?
+      //delay(200); //nødvendigt?
     }
   }
 }
@@ -63,4 +64,3 @@ void loop() {
 int doIBelieveThis(String s) {
   return 1;
 }
-

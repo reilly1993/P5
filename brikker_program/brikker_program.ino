@@ -17,20 +17,22 @@ void setup() {
   upwards = digitalRead(9);
   
   if(!upwards) {
-    portMale = SoftwareSerial(10, 11); //9 input
+    portMale = SoftwareSerial(4, 5); //9 input
     portFemale = SoftwareSerial(3, 2); //10 output
   } else {
-    portMale = SoftwareSerial(11, 10); //8 input
+    portMale = SoftwareSerial(5, 4); //8 input
     portFemale = SoftwareSerial(2, 3); //11 output
   }
 
   portMale.begin(9600);
   portFemale.begin(9600);
+  portMale.setTimeout(100);
+  portFemale.setTimeout(100);
 }
 
 void loop() {
   readString = portFemale.readStringUntil('|');
-  writeString = upwards ? "11-" : "10-"; //[0] = identifier, [1] tilt
+  writeString = upwards ? "31" : "30"; //[0] = identifier, [1] tilt
   if(readString.length() > 0) {
     writeString += readString + "|";
     portMale.print(writeString);

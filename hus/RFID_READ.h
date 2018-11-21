@@ -25,7 +25,7 @@ void readRFID(MFRC522 sensor, String pos, String* actorContainer) {
   lastSet = millis();
 
   String UID = getUID(sensor.uid.uidByte, sensor.uid.size);
-
+  Serial.println(UID);
   for(int i = 0; i<ACTORS; i++) {
     if (UID == actorIDs[i]) {
       Serial.print(actorNames[i]); Serial.print(" on "); Serial.println(pos);
@@ -33,5 +33,3 @@ void readRFID(MFRC522 sensor, String pos, String* actorContainer) {
     }
   }
 }
-
-
