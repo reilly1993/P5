@@ -10,28 +10,30 @@ bool upwards = true;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(2, INPUT);
+  pinMode(9, INPUT);
 
   if(!digitalRead(9)) delay(100); //dobbelt test
   upwards = digitalRead(9);
   
   if(!upwards) {
-    portMale = SoftwareSerial(2, 3); //9 input
-    portFemale = SoftwareSerial(11, 10); //10 output
+    portMale = SoftwareSerial(4, 5); //9 input
+    portFemale = SoftwareSerial(2, 3); //10 output
   } else {
-    portMale = SoftwareSerial(3, 2); //8 input
-    portFemale = SoftwareSerial(10, 11); //11 output
+    portMale = SoftwareSerial(5, 4); //8 input
+    portFemale = SoftwareSerial(3, 2); //11 output
   }
 
   while(!Serial);
 
   portMale.begin(9600);
   portFemale.begin(9600);
+  portMale.setTimeout(100);
+  portFemale.setTimeout(100);
 }
 
 void loop() {
   readString = portFemale.readStringUntil('|');
-  writeString = upwards ? "01" : "00"; //[0] = identifier, [1] tilt
+  writeString = upwards ? "71" : "70"; //[0] = identifier, [1] tilt
   writeString += (int) map(analogRead(A5), 0, 255, 0, 1000)/100; //0-5 (aktør)
   writeString += "-"; //ex: 003 = brik 0, tilt off, aktør 3
   if(readString.length() > 0){

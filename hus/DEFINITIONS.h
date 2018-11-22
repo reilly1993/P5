@@ -1,4 +1,4 @@
 
 #define ACTORS 3
-String actorIDs[] = {"05 EE F4 C2", "3D 42 2E 72", "01 42 89 73"};
-String actorNames[] = {"cat", "car_1", "ludo"};
+String actorIDs[] = {"05 EE F4 C2", "F5 8A F6 C2", "EB C2 01 89"};
+String actorNames[] = {"cat", "boy", "girl"};

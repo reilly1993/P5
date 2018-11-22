@@ -16,14 +16,18 @@ Definitioner:
 */
 
 #define SS_PIN 53
+#define WINDOWRFIDPIN 48
+#define HOUSERFIDPIN 49
 #define RST_PIN 3 //write
 
 #define DOORPIN 4
 #define WINDOWPIN 5
-#define LIGHTPIN 13
+#define LIGHTPIN 12
 
 #define MOONBUTTONPIN 15
 #define MOONLIGHTPIN 14
+#define SUNBUTTONPIN 16
+#define SUNLIGHTPIN 17
 
 //RFID
 #include <SPI.h>
@@ -31,16 +35,20 @@ Definitioner:
 
 
 char doorTriggers[3][10][5];
-char lightTriggers[3][10][5];
+char windowTriggers[3][10][5];
 
 #include "RFID_READ.h"
 #include "RF_READ.h"
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
+MFRC522 mfrc522Window(WINDOWRFIDPIN, RST_PIN);
+MFRC522 mfrc522House(HOUSERFIDPIN, RST_PIN);
 
-String drivewayActor = "";
+String doorActor = "";
+String windowActor = "";
+String houseActor = "";
 bool isRaining = true;
-bool isDay = true;
+bool isDay = false;
 
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
@@ -48,13 +56,17 @@ unsigned long debounceDelay = 50;    // the debounce time; increase if the outpu
 void setup() 
 {
   initTriggerArray(doorTriggers);
-  //initTriggerArray(lightTriggers);
+  initTriggerArray(windowTriggers);
   Serial.begin(9600);   // Initiate a serial communication
   SPI.begin();      // Initiate  SPI bus
   
   mfrc522.PCD_Init();   // Initiate MFRC522
+  mfrc522Window.PCD_Init();   // Initiate MFRC522
+  mfrc522House.PCD_Init();   // Initiate MFRC522
 
   mfrc522.PCD_SetRegisterBitMask(mfrc522.RFCfgReg, (0x07<<4));
+  mfrc522Window.PCD_SetRegisterBitMask(mfrc522Window.RFCfgReg, (0x07<<4));
+  mfrc522House.PCD_SetRegisterBitMask(mfrc522House.RFCfgReg, (0x07<<4));
 
   // Initialise the IO and ISR
   vw_set_ptt_inverted(true); // Required for DR3100
@@ -69,23 +81,34 @@ void setup()
 
   pinMode(MOONBUTTONPIN, INPUT);
   pinMode(MOONLIGHTPIN, OUTPUT);
+  pinMode(SUNLIGHTPIN, OUTPUT);
+  pinMode(SUNBUTTONPIN, INPUT);
 
   digitalWrite(MOONLIGHTPIN, !isDay);
-  //digitalWrite(SUNLIGHTPIN, isDay);
+  digitalWrite(SUNLIGHTPIN, isDay);
 
-  parseBuffer("021-30-|415-40-51-||", 19);
+  //parseBuffer("021-30-|415-40-51-||", 19);
   
-  /*while(true) {
-    readRFID(mfrc522, "driveway", &drivewayActor);
+  while(true) {
+    
+    readRFID(mfrc522, "door", &doorActor);
+    readRFID(mfrc522Window, "window", &windowActor);
+    readRFID(mfrc522House, "house", &houseActor);
     readRF(); //updates triggers
     readDayState();
-
+    //debug();
     if(check(doorTriggers)) {
       toggleDoor(true);
     } else {
       toggleDoor(false);
     }
-  }*/
+
+    if(check(windowTriggers)) {
+      toggleWindow(true);
+    } else {
+      toggleWindow(false);
+    }
+  }
 }
 
 
@@ -109,42 +132,46 @@ void loop()
     //toggleGarage(garageServo, false);
   }
   
-  if(check(lightTriggers)) {
+  /*if(check(lightTriggers)) {
     toggleLight(true);
   } else {
     toggleLight(false);
-  }
+  }*/
   
   //delay(500);
 }
 int moonReading = LOW;
 int sunReading = LOW;
-int readState = true;
+int readState = false;
 
 void readDayState() {
+  
   moonReading = digitalRead(MOONBUTTONPIN);
+  //Serial.println(moonReading);
   if(moonReading) {
     Serial.println(moonReading);
     readState = false;
+  }
+
+  sunReading = digitalRead(SUNBUTTONPIN);
+  if(sunReading) {
+    Serial.println(sunReading);
+    readState = true;  
   }
 
   if(readState != isDay) {
     isDay = readState;
     if(isDay) {
       digitalWrite(MOONLIGHTPIN, LOW);
-      //digitalWrite(SUNLIGHTPIN, HIGH);
+      digitalWrite(SUNLIGHTPIN, HIGH);
     } else {
       digitalWrite(MOONLIGHTPIN, HIGH);
-      //digitalWrite(SUNLIGHTPIN, LOW);
+      digitalWrite(SUNLIGHTPIN, LOW);
     }
     
   }
 
-  /*sunReading = digitalRead(SUNBUTTONPIN);
-  if(sunReading) {
-    Serial.println(sunReading);
-    isDay = true;  
-  }*/
+  
 
   
 }
@@ -160,9 +187,25 @@ bool check(char triggerArray[][10][5]) {
 
 bool checkRow(char (* row)[5]) {
   for(int i = 0; i<10; i++) {
+    String s = (String)row[i];
     if(row[i][0] != '\0') { //not empty row
-      if((String)row[i] == "20" && !isDay) return false;
-      else if((String)row[i] == "21" && isDay) return false;
+      if(s == "10" && doorActor != "") return false;
+      else if(s == "11" && doorActor == "") return false;
+      else if(s == "20" && windowActor != "") return false;
+      else if(s == "21" && windowActor == "") return false;
+      else if(s == "30" && houseActor != "") return false;
+        else if(s == "31" && houseActor == "") return false;
+      else if(s == "40" && isDay) return false;
+      else if(s == "41" && !isDay) return false;
+      
+      if(row[i][0] == '5')
+        if(!checkActor(houseActor, row[i])) return false;
+      
+      if(row[i][0] == '6')
+        if(!checkActor(doorActor, row[i])) return false;
+      
+      if(row[i][0] == '7')
+        if(!checkActor(windowActor, row[i])) return false;
       
       /*switch(row[i]) {
         case 0:
@@ -180,6 +223,21 @@ bool checkRow(char (* row)[5]) {
       }*/
     }
   }
+  return true;
+}
+
+bool checkActor(String actor, char trigger[5]) {
+  if(trigger[1] == '1') {
+    if((trigger[2] == '3' && trigger[3] == '3') && actor != "boy") return false;
+    if((trigger[2] == '3' && trigger[3] == '6') && actor != "girl") return false;
+    if((trigger[2] == '2' && trigger[3] == '6') && actor != "cat") return false;
+  }
+  if(trigger[1] == '0') {
+    if((trigger[2] == '3' && trigger[3] == '3') && actor == "boy") return false;
+    if((trigger[2] == '3' && trigger[3] == '6') && actor == "girl") return false;
+    if((trigger[2] == '2' && trigger[3] == '6') && actor == "cat") return false;
+  }
+
   return true;
 }
 

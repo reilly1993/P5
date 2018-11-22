@@ -18,10 +18,10 @@ void setup() {
   
   if(!upwards) {
     portMale = SoftwareSerial(4, 5); //9 input
-    portFemale = SoftwareSerial(3, 2); //10 output
+    portFemale = SoftwareSerial(2, 3); //10 output
   } else {
     portMale = SoftwareSerial(5, 4); //8 input
-    portFemale = SoftwareSerial(2, 3); //11 output
+    portFemale = SoftwareSerial(3, 2); //11 output
   }
 
   portMale.begin(9600);
@@ -32,7 +32,7 @@ void setup() {
 
 void loop() {
   readString = portFemale.readStringUntil('|');
-  writeString = upwards ? "31" : "30"; //[0] = identifier, [1] tilt
+  writeString = upwards ? "41-" : "40-"; //[0] = identifier, [1] tilt
   if(readString.length() > 0) {
     writeString += readString + "|";
     portMale.print(writeString);

@@ -8,13 +8,13 @@ void clearTrigger(char* trigger) {
 
 void parseBuffer(uint8_t* buf, uint8_t buflen) {
   char (*triggerArrays)[10][5];
-  Serial.println((char*)buf); //received string
+  
   switch(buf[0]) { //which hub?
     case '0': //garage
       triggerArrays = doorTriggers;
       break;
     case '1': //light
-      triggerArrays = lightTriggers;
+      triggerArrays = windowTriggers;
       break;
     //case '2': //door
   }
@@ -42,7 +42,7 @@ void parseBuffer(uint8_t* buf, uint8_t buflen) {
     }
   }
 
-  for(int i = 0; i<3; i++) {
+  /*for(int i = 0; i<3; i++) {
     if(triggerArrays[i][0][0] != '\0') {
       for(int j = 0; j<10; j++) {
         if(triggerArrays[i][j][0] != '\0') {
@@ -52,7 +52,7 @@ void parseBuffer(uint8_t* buf, uint8_t buflen) {
         }
       }
     }
-  }
+  }*/
 }
 
 void readRF() {
@@ -60,6 +60,7 @@ void readRF() {
   uint8_t buf[VW_MAX_MESSAGE_LEN];
   uint8_t buflen = VW_MAX_MESSAGE_LEN;
   if (vw_get_message(buf, &buflen)) {
+    Serial.println((char*)buf); //received string
     parseBuffer(buf, buflen);
   }
 }
